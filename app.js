@@ -100,6 +100,27 @@ function zoomBy(factor) {
   applyZoom()
 }
 
+// Drag to pan with the mouse (touch already pans natively).
+const pane = $('#preview')
+let drag = null
+pane.addEventListener('pointerdown', e => {
+  if (e.pointerType !== 'mouse' || e.button !== 0) return
+  const r = pane.getBoundingClientRect()
+  if (e.clientX - r.left > pane.clientWidth || e.clientY - r.top > pane.clientHeight) return // on a scrollbar
+  drag = { x: e.clientX, y: e.clientY, left: pane.scrollLeft, top: pane.scrollTop }
+  pane.setPointerCapture(e.pointerId)
+  pane.classList.add('dragging')
+  e.preventDefault() // don't select diagram text while dragging
+})
+pane.addEventListener('pointermove', e => {
+  if (!drag) return
+  pane.scrollLeft = drag.left - (e.clientX - drag.x)
+  pane.scrollTop = drag.top - (e.clientY - drag.y)
+})
+const endDrag = () => { drag = null; pane.classList.remove('dragging') }
+pane.addEventListener('pointerup', endDrag)
+pane.addEventListener('pointercancel', endDrag)
+
 $('#zoomIn').addEventListener('click', () => zoomBy(ZOOM_STEP))
 $('#zoomOut').addEventListener('click', () => zoomBy(1 / ZOOM_STEP))
 $('#zoomReset').addEventListener('click', () => { zoom = null; applyZoom() })
