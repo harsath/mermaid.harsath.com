@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <title>mermaid.harsath.com</title>
+  <style>
+    /* Light only. Matte off-white and soft black (same palette as airdrop.harsath.com). */
+    :root {
+      --bg: #efeee9; --surface: #fbfaf7; --text: #1d1d1b; --muted: #4f4d47;
+      --border: #bdbab1; --soft: #e2dfd7;
+      --ok: #3f6b4a; --err: #a8432f;
+      --btn: #1d1d1b; --btn-text: #fbfaf7; --btn-hover: #3a3a37;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 15px;
+      background: var(--bg); color: var(--text); line-height: 1.5; margin: 0;
+      display: flex; flex-direction: column;
+    }
+    [hidden] { display: none !important; }
+
+    header {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
+      padding: 12px 20px; border-bottom: 1px solid var(--border);
+    }
+    h1 { font-size: 20px; font-weight: 700; letter-spacing: -.02em; margin: 0; }
+    .byline { margin: 0 auto 0 -6px; color: var(--muted); font-size: 14px; }
+    .byline span[aria-hidden] { color: var(--border); margin-right: 6px; }
+    .byline .heart { color: var(--err); }
+    .byline a { color: var(--text); text-underline-offset: 3px; }
+    h1 a { color: var(--text); text-decoration: none; }
+    h1 span { color: #6f6d66; font-weight: 500; }
+    .group { display: flex; align-items: center; gap: 6px; }
+    .group label { color: var(--muted); font-size: 14px; }
+
+    button, select {
+      font: inherit; font-size: 14px; font-weight: 500; padding: 7px 14px; border-radius: 9px; cursor: pointer;
+    }
+    button { border: none; background: var(--btn); color: var(--btn-text); }
+    button:hover { background: var(--btn-hover); }
+    button:disabled { opacity: .4; cursor: default; }
+    button.ghost { background: transparent; color: var(--text); padding: 7px 8px; text-decoration: underline; text-underline-offset: 3px; }
+    button.ghost:hover { background: var(--soft); }
+    select { border: 1px solid var(--border); background: var(--surface); color: var(--text); padding: 6px 8px; }
+    :focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+    .bar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+      padding: 8px 20px; border-bottom: 1px solid var(--border); background: var(--surface); font-size: 14px;
+    }
+    .bar input {
+      font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; flex: 1; min-width: 200px; max-width: 460px;
+      padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text);
+    }
+    .bar a { color: var(--text); text-underline-offset: 3px; }
+    .editor:has(#code[readonly]) #hl { opacity: .7; }
+    .muted { color: var(--muted); }
+    .err { color: var(--err); }
+
+    main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    /* Editor: a transparent textarea on top of a highlighted <pre> with identical
+       text metrics; the <pre> follows the textarea's scroll position. */
+    .editor { position: relative; min-height: 0; border-right: 1px solid var(--border); background: var(--surface); }
+    #code, #hl {
+      position: absolute; inset: 0; margin: 0; border: none; padding: 16px 20px;
+      font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px; line-height: 1.6; letter-spacing: 0;
+      tab-size: 4; white-space: pre; overflow: auto;
+    }
+    #code {
+      resize: none; outline: none; background: transparent;
+      color: transparent; caret-color: var(--text); -webkit-text-fill-color: transparent;
+    }
+    #code::selection { background: rgba(29, 29, 27, .15); }
+    /* extra bottom/right padding so it can always scroll as far as the textarea */
+    #hl { overflow: hidden; color: var(--text); pointer-events: none; padding-bottom: 56px; padding-right: 60px; }
+    #hl .comment { color: #8a877e; font-style: italic; }
+    #hl .keyword { color: #7a3e8e; }
+    #hl .arrow, #hl .operator { color: #b05a2a; }
+    #hl .string, #hl .entity { color: #3f6b4a; }
+    #hl .property { color: #2f5f8a; }
+    #hl .important { color: #8a5a00; }
+    #hl .punctuation { color: #6f6d66; }
+    .pane { position: relative; min-height: 0; display: flex; flex-direction: column; }
+    #preview { flex: 1; overflow: auto; padding: 24px; display: flex; background: #fff; }
+    #preview svg { margin: auto; height: auto; flex: none; }
+    .zoom {
+      position: absolute; top: 12px; right: 12px; display: flex;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 9px; overflow: hidden;
+    }
+    .zoom button { background: transparent; color: var(--text); border-radius: 0; padding: 4px 12px; font-size: 16px; }
+    .zoom button:hover { background: var(--soft); }
+    #zoomReset { font-size: 13px; min-width: 56px; font-variant-numeric: tabular-nums; }
+    #error {
+      font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; white-space: pre-wrap;
+      margin: 0; padding: 10px 20px; border-top: 1px solid var(--border); background: #f6e9e4; color: var(--err);
+      max-height: 40%; overflow: auto;
+    }
+
+    @media (max-width: 760px) {
+      main { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+      .editor { border-right: none; border-bottom: 1px solid var(--border); }
+      header, .bar { padding-left: 16px; padding-right: 16px; }
+      .byline { flex-basis: 100%; margin: -8px 0 0; }
+      .byline span[aria-hidden] { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><a href="./">mermaid<span>.harsath.com</span></a></h1>
+    <p class="byline"><span aria-hidden="true">|</span> made with <span class="heart" aria-label="love">&#x2665;&#xFE0E;</span> by <a href="https://harsath.com" target="_blank" rel="noopener">@harsath</a></p>
+    <div class="group">
+      <label for="format">Export</label>
+      <select id="format">
+        <option value="svg">SVG</option>
+        <option value="png" selected>PNG</option>
+        <option value="jpeg">JPEG</option>
+        <option value="pdf">PDF</option>
+      </select>
+      <select id="scale" title="Resolution for PNG and JPEG">
+        <option value="1">1x</option>
+        <option value="2" selected>2x</option>
+        <option value="4">4x</option>
+      </select>
+      <button id="export">Download</button>
+    </div>
+    <div class="group" id="shareGroup">
+      <label for="days">Share for</label>
+      <select id="days">
+        <option value="3">3 days</option>
+        <option value="7" selected>1 week</option>
+        <option value="30">1 month</option>
+        <option value="180">6 months</option>
+      </select>
+      <button id="share">Get link</button>
+    </div>
+  </header>
+
+  <div class="bar" id="shareBar" hidden>
+    <input id="shareLink" readonly aria-label="Share link" />
+    <button id="copy">Copy</button>
+    <span class="muted" id="shareNote"></span>
+  </div>
+  <div class="bar" id="sharedBar" hidden>
+    <span id="sharedNote"></span>
+    <button id="fork">Edit a copy</button>
+    <a href="./">Back to your own diagram</a>
+  </div>
+  <div class="bar err" id="msg" hidden></div>
+
+  <main>
+    <div class="editor">
+      <pre id="hl" aria-hidden="true"></pre>
+      <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Mermaid source"></textarea>
+    </div>
+    <div class="pane">
+      <div id="preview" aria-label="Preview"></div>
+      <div class="zoom">
+        <button id="zoomOut" aria-label="Zoom out">−</button>
+        <button id="zoomReset" title="Fit to pane">Fit</button>
+        <button id="zoomIn" aria-label="Zoom in">+</button>
+      </div>
+      <pre id="error" hidden></pre>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-core.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-mermaid.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
