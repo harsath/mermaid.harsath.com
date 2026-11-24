@@ -121,6 +121,26 @@ const endDrag = () => { drag = null; pane.classList.remove('dragging') }
 pane.addEventListener('pointerup', endDrag)
 pane.addEventListener('pointercancel', endDrag)
 
+// Drag the divider to resize editor vs. preview. Stored as a percentage so it
+// still fits when the window is resized; each side keeps at least 200px.
+const divider = $('#divider')
+divider.addEventListener('pointerdown', e => {
+  if (e.button !== 0) return
+  divider.setPointerCapture(e.pointerId)
+  divider.classList.add('dragging')
+  document.body.classList.add('resizing')
+  e.preventDefault()
+})
+divider.addEventListener('pointermove', e => {
+  if (!divider.classList.contains('dragging')) return
+  const r = $('main').getBoundingClientRect()
+  const x = Math.min(r.width - 200, Math.max(200, e.clientX - r.left))
+  $('main').style.setProperty('--split', `${(x / r.width) * 100}%`)
+})
+const endResize = () => { divider.classList.remove('dragging'); document.body.classList.remove('resizing') }
+divider.addEventListener('pointerup', endResize)
+divider.addEventListener('pointercancel', endResize)
+
 $('#zoomIn').addEventListener('click', () => zoomBy(ZOOM_STEP))
 $('#zoomOut').addEventListener('click', () => zoomBy(1 / ZOOM_STEP))
 $('#zoomReset').addEventListener('click', () => { zoom = null; applyZoom() })

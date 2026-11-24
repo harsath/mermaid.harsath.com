@@ -60,10 +60,15 @@
     .muted { color: var(--muted); }
     .err { color: var(--err); }
 
-    main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    /* --split is the editor's width, set by dragging the divider (app.js) */
+    main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, var(--split, 1fr)) 1px minmax(0, 1fr); }
+    .divider { position: relative; background: var(--border); cursor: col-resize; touch-action: none; }
+    .divider::before { content: ''; position: absolute; inset: 0 -5px; z-index: 5; } /* wider grab area */
+    .divider:hover, .divider.dragging { background: var(--muted); }
+    body.resizing { cursor: col-resize; user-select: none; -webkit-user-select: none; }
     /* Editor: a transparent textarea on top of a highlighted <pre> with identical
        text metrics; the <pre> follows the textarea's scroll position. */
-    .editor { position: relative; min-height: 0; border-right: 1px solid var(--border); background: var(--surface); }
+    .editor { position: relative; min-height: 0; background: var(--surface); }
     #code, #hl {
       position: absolute; inset: 0; margin: 0; border: none; padding: 16px 20px;
       font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px; line-height: 1.6; letter-spacing: 0;
@@ -106,7 +111,8 @@
 
     @media (max-width: 760px) {
       main { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
-      .editor { border-right: none; border-bottom: 1px solid var(--border); }
+      .editor { border-bottom: 1px solid var(--border); }
+      .divider { display: none; }
       header, .bar { padding-left: 16px; padding-right: 16px; }
       .byline { flex-basis: 100%; margin: -8px 0 0; }
       .byline span[aria-hidden] { display: none; }
@@ -161,6 +167,7 @@
       <pre id="hl" aria-hidden="true"></pre>
       <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Mermaid source"></textarea>
     </div>
+    <div class="divider" id="divider" role="separator" aria-orientation="vertical" title="Drag to resize"></div>
     <div class="pane">
       <div id="preview" aria-label="Preview"></div>
       <div class="zoom">
