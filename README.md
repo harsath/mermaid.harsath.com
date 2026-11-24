@@ -32,13 +32,18 @@ A mermaid editor with live side-by-side preview, export to SVG / PNG / JPEG / PD
 | `crypto.js` | key derivation and encryption (WebCrypto) |
 | `supabase/migrations/0001_init.sql` | `shares` table, cleanup cron job, `ping` |
 | `supabase/migrations/0002_encrypt.sql` | switches shares to ciphertext; `create_share` / `get_share` |
+| `.github/workflows/keepalive.yml` | daily ping so the free project doesn't pause |
 
 ## Setup (one time)
 
-It uses the same Supabase project as airdrop.harsath.com (the `shares` table doesn't touch anything airdrop uses), so that project's keep-alive workflow keeps this awake too.
+It uses the same Supabase project as airdrop.harsath.com (the `shares` table doesn't touch anything airdrop uses).
 
 1. **Database:** paste `supabase/migrations/0001_init.sql`, then `0002_encrypt.sql`, into **SQL Editor** and run each. Both are safe to re-run.
-2. To use a different project instead, change `SUPABASE_URL` / `SUPABASE_KEY` at the top of `app.js` and copy airdrop's `.github/workflows/keepalive.yml` here (it calls the `ping` function, which this migration also creates).
+2. To use a different project instead, change `SUPABASE_URL` / `SUPABASE_KEY` at the top of `app.js` and the project URL and key in `.github/workflows/keepalive.yml`.
+
+## Free-tier limits
+
+- The project pauses after about a week of no activity. `.github/workflows/keepalive.yml` calls `ping` once a day to prevent that (airdrop's copy pings the same project at a different hour, so either one alone is enough). GitHub disables scheduled workflows in repos with no commits for 60 days; re-enable it in the Actions tab if that happens.
 
 ## Run locally
 
